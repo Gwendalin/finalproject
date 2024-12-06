@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile</title>
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Include Bootstrap 3 CSS for Glyphicons -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- CSS -->
+  <link href="{% static '/css/profile.css' %}" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <div class="logo-container">
+        <a href="{% url 'user_home' %}"><img src="{% static '/image/logo.jpg' %}" alt="Logo"></a>
+    </div>
+    <div class="container">
+
+        <div class="row">
+            <div class="col">
+                <a href="{% url 'user_home' %}" style=" color: black; text-decoration: none;"><i class="back bi bi-arrow-left"></i> Home</a> 
+            </div>
+            <div class="col">
+                <div class="nav-icons">
+                    <a href="{% url 'user_guidance' %}"><span class="glyphicon glyphicon-question-sign guidance-btn" style=" color: black; text-decoration: none;"></span></a>
+                    <a href="#"><img src="{% static '/image/reminders.png' %}" class="reminder" alt="Reminder"></a>
+                    <a href="{% url 'guest_home' %}" class="btn btn-outline-dark logout-btn">Logout</a>
+                </div>
+            </div>
+        </div>
+        
+        <h1 style="text-align: center;">Profile</h1>
+
+        <!-- Profile Info Section -->
+        <div class="profile-section">
+            <h2><b>My Account</b></h2>
+            <div class="row" style="margin-top: 10px;">
+                <div class="col">
+                    <p>Name: {{ name }}</p>
+                    <p>Email: {{ email }}</p>    
+                </div>
+                <div class="col-auto align-self-end">
+                    <a href="{% url 'edit_profile' %}"><button class="btn btn-primary" style="font-size: 14px;">Edit Profile</button></a>        
+                </div>
+            </div>
+        </div>
+        
+        <!-- Links Section -->
+        <div class="profile-section">
+        <a href="#" style=" color: black; text-decoration: none;">Favourite Styles and Trends <i class="bi bi-chevron-right position-absolute end-0"></i></a>
+        </div>
+        <div class="profile-section">
+        <a href="#" style=" color: black; text-decoration: none;">Saved Events<i class="bi bi-chevron-right position-absolute end-0"></i></a>
+        </div>
+        <div class="profile-section">
+        <a href="{% url 'report' %}" style=" color: black; text-decoration: none;">Report<i class="bi bi-chevron-right position-absolute end-0"></i></a>
+        </div>
+    </div>
+</body>
+</html>

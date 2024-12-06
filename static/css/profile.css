@@ -1,0 +1,55 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.logo-container {
+    text-align: center;
+    margin-top: 20px;
+}
+.logo-container img {
+    height: 200px; 
+}
+.nav-icons {
+    display: flex;             
+    justify-content: flex-end;    
+    gap: 5px;               
+}
+/* Button styling */
+.logout-btn {
+    border-radius: 25px;
+    padding: 5px 30px; 
+    font-size: 14px; 
+    margin-left: 10px; 
+}
+.guidance-btn, .reminder{
+    font-size: 18px; 
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+.reminder{
+    height: 40px;
+    width: 40px;
+}
+.back{
+    font-size: 18px; 
+    text-align: center;
+    vertical-align: middle;
+}
+.container{
+    width: 100%;
+    font-size: 16px;
+}
+.profile-header {
+    text-align: center;
+}
+.profile-section {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+.btn{
+    margin-top: 10px;
+}

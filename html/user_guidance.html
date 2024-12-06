@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fashion Design User Home Page</title>
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Include Bootstrap 3 CSS for Glyphicons -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- CSS -->
+  <link href="{% static '/css/user_guidance.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="logo-container">
+        <a href="{% url 'user_home' %}"><img src="{% static '/image/logo.jpg' %}" alt="Logo"></a>
+    </div>
+
+    <div class="header-section">
+        <div class="container">
+            <div class="back-btn">
+                <a href="{% url 'user_home' %}" style="color: black; text-decoration: none;"><i class="back bi bi-arrow-left"></i></a>
+            </div>
+            <h1>Help Manual</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- About the System Section -->
+        <div class="about-section">
+            <h2>About the System</h2><br>
+            <p>This website was created to facilitate the creation of garments with high creativity and high-quality by fashion designers. Several functions are provided in the website that can be fully utilized by fashion designers for the easy process of garments creation without any extra costs.
+               <br><br><strong>Functions provided:</strong> 
+               <ul>
+                    <li>2D design workspace</li>
+                    <li>3D design generation</li>
+                    <li>Color Guidance</li>
+                    <li>Style and Trends Recommendation</li>
+                    <li>Upcoming Event Tracking (e.g., fashion event)</li>
+                </ul>
+            </p>
+        </div>
+
+        <div class="about-2D-section">
+            <h2>About 2D Design Working Space Functions</h2><br>
+            <ul>
+                <li>The 2D design workspace is used to create 2D designs.</li>
+                <li>A variety of tools are provided on the left sidebar for the creation of designs work, such as lines, polygons, shapes, etc.</li>
+                <li>A "Save" option is provided to save the work and a "Share" option is provided to share the work among friends.</li>
+            </ul>
+        </div>
+
+        <div class="about-3D-section">
+            <h2>About 3D Design Generation Functions</h2><br>
+            <ul>
+                <li>The 3D Design Generation is used to convert the 2D designs into 3D designs to make designs more dimensional and vivid.</li>
+                <li>Adjustments features are provided to enhance the designs' view.</li>
+                <li>Fashion designers are allowed to return to the 2D design working space for design editing.</li>
+            </ul>
+        </div>
+
+        <div class="about-color-guidance-section">
+            <h2>About Color Guidance Functions</h2><br>
+            <ul>
+                <li>The color guidance feature will provide suggestions for color matching and extraction of colors.</li>
+            </ul>
+        </div>
+
+        <div class="about-recommendation-section">
+            <h2>About Style and Trends Recommendation Functions</h2><br>
+            <ul>
+                <li>This website provides style and fashion trend recommendations, keeping up with the latest styles and fashion trends, so that design works can keep up with real-time fashion trends.</li>
+                <li>Recommendations can be saved for reference.</li>
+            </ul>
+        </div>
+
+        <div class="about-events-section">
+            <h2>About Upcoming Events Tracking Functions</h2><br>
+            <ul>
+                <li>The latest upcoming events such as fashion events will be tracked.</li>
+                <li>Reminder can be set for the upcoming events.</li>
+            </ul>
+        </div>
+
+        <div class="usage-section">
+            <h2>How to use the system?</h2><br>
+            <p><strong>Step 1: </strong>User has to Login/Register an account to perform tasks. The user can click on the Login/Register button provided on the top right side.</p>
+            <p><strong>Step 2: </strong> After Logging in/Registering, the user is allowed to perform tasks by clicking on the navigation buttons provided at the top (2D Design, 3D Generation, Color Guidance & Upcoming Event).</p>
+        </div>
+    </div>
+</body>
+</html>

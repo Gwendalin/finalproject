@@ -1,0 +1,115 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+.logo-container {
+  text-align: center;
+  margin-top: 20px;
+}
+.logo-container img {
+  height: 200px; 
+}
+/* Navbar styling */
+.navbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  position: relative; 
+}
+.navbar .nav-icons {
+  position: absolute;
+  right: 20px;
+}
+/* Main heading styling */
+.main-heading {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 36px;
+  font-weight: bold;
+}
+/* Subheading styling */
+.sub-heading {
+  text-align: center;
+  font-size: 18px;
+  margin: 20px 0px 30px;
+}
+.image-grid {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 100%; 
+  height: 400px;
+  overflow: hidden;
+}
+.image-grid img {
+  flex-grow: 1;
+  flex-shrink: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Button styling */
+.register-btn, .login-btn {
+  border-radius: 25px;
+  padding: 5px 30px; 
+  font-size: 14px; 
+  margin-left: 10px; 
+}
+.guidance-btn{
+  font-size: 18px; 
+  padding: 10px; 
+  border-radius: 25px;
+  margin-left: 10px; 
+  text-align: center;
+  vertical-align: middle;
+}
+/* What's Having section */
+.whats-having {
+  text-align: center;
+  padding: 50px 0;
+}
+.whats-having h2 {
+  font-size: 28px;
+  margin-bottom: 40px;
+}
+/* Feature Cards styling */
+.feature-cards {
+  display: flex;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  padding: 0 20px;
+}
+.feature-card {
+  background-color: #e0f7fa;
+  width: 20%;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  margin: 10px;
+}
+.feature-card:nth-child(odd) {
+  background-color: #e0e7fa;
+}
+.feature-card h5 {
+  font-size: 16px;
+  font-weight: bold;
+}
+.feature-card p {
+  font-size: 14px;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+    .feature-card {
+      width: 45%; 
+    }
+}
+@media (max-width: 768px) {
+    .feature-card {
+      width: 100%; 
+      margin-bottom: 20px;
+    }
+}

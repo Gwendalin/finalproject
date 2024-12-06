@@ -1,0 +1,47 @@
+.login-container {
+    display: flex;
+    height: 100vh;
+}
+.image-container {
+    background-image: url('../image/login.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 800px;
+    opacity: 0.8;
+}
+.login-form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40%;
+    padding: 30px;
+    margin: auto;
+}
+.login-form {
+    width: 100%;
+    max-width: 400px;
+}
+.form-control {
+    border-radius: 25px; 
+    padding: 10px 20px; 
+    background-color: #f0f0f0; 
+    border: none; 
+}
+.form-control:focus {
+    outline: none;
+    box-shadow: none;
+    background-color: #f0f0f0;
+}
+.btn {
+    border-radius: 25px;
+    padding: 10px 20px; 
+}
+/* Styling the forgot password link */
+.forgot-password {
+    color: black;
+    text-decoration: none;
+}
+.forgot-password:hover {
+    text-decoration: underline; 
+}

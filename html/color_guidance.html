@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Matching Guidance</title>
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Include Bootstrap 3 CSS for Glyphicons -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- CSS -->
+  <link href="{% static '/css/color_guidance.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="logo-container">
+        <a href="{% url 'user_home' %}"><img src="{% static '/image/logo.jpg' %}" alt="Logo"></a>
+    </div>
+    
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="navbar-custom w-100">
+        <!-- Centered Navigation Links -->
+        <div class="collapse navbar-collapse justify-content-center">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+            <a class="nav-link" href="{% url '2d_sketch' %}">2D DESIGN</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="{% url '3d_model' %}">3D GENERATION</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="{% url 'color_guidance' %}">COLOR GUIDANCE</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="{% url 'recommendation' %}">RECOMMENDATION</a>
+            </li>
+        </ul>
+        </div>
+
+        <!-- Icons on the right -->
+        <div class="nav-icons">
+        <a href="{% url 'user_guidance' %}"><span class="glyphicon glyphicon-question-sign guidance-btn" style=" color: black; text-decoration: none;"></span></a>
+        <a href="#"><img src="{% static '/image/reminders.png' %}" class="reminder" alt="Reminder"></a>
+        <a href="{% url 'profile' %}"><span class="glyphicon glyphicon-user profile-btn" style=" color: black; text-decoration: none;"></span></a>
+        <a href="{% url 'guest_home' %}" class="btn btn-outline-dark logout-btn">Logout</a>
+        </div>
+    </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="text-center">Color Matching</h1>
+
+        <!-- Color Picker Form -->
+        <form method="POST" action="{% url 'color_guidance' %}" class="text-center mb-4">
+            {% csrf_token %}
+            <div class="pick-color">
+                <label for="colorPicker">Pick a Base Color:</label>
+                <input type="color" id="colorPicker" name="color" value="{{ default_color }}">
+                <br>
+                <p>Or</p>
+                <label for="hexCode">Enter a HEX color:</label>
+                <input type="text" id="hexCode" name="hex_code" placeholder="#5cad45" value="{{ default_color }}">
+            </div>
+            <!-- Color Display Section -->
+            <div class="row justify-content-center mt-4">
+                {% for color, hex_color in combined_palette %}
+                    <div class="col-2 text-center color-box" 
+                        data-r="{{ color.0 }}" 
+                        data-g="{{ color.1 }}" 
+                        data-b="{{ color.2 }}" 
+                        style="height: 100px; margin-bottom: 10px;">
+                    </div>
+                {% empty %}
+                    <p>No colors available.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Hex Color Display Below Boxes -->
+            <div class="row justify-content-center mt-2">
+                {% for color, hex_color in combined_palette %}
+                    <div class="col-2 text-center">
+                        <p>{{ hex_color }}</p>
+                    </div>
+                {% empty %}
+                    <p>No colors available.</p>
+                {% endfor %}
+            </div>
+
+            <div class="text-center mb-4">
+                <button id="generate-button" class="generate-btn btn btn-dark">Generate Colors</button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        // Set background color for each color box based on RGB data
+        document.querySelectorAll('.color-box').forEach(function(box) {
+            const r = box.getAttribute('data-r');
+            const g = box.getAttribute('data-g');
+            const b = box.getAttribute('data-b');
+            box.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        });
+
+        // Synchronize color picker and hex input field
+        document.getElementById('colorPicker').addEventListener('input', function(event) {
+            // When the color picker changes, update the hex input
+            document.getElementById('hexCode').value = event.target.value;
+        });
+
+        document.getElementById('hexCode').addEventListener('input', function(event) {
+            // When the hex input changes, update the color picker
+            const hexValue = event.target.value;
+
+            // Ensure the value is a valid hex color
+            if(/^#[0-9A-Fa-f]{6}$/i.test(hexValue)) {
+                document.getElementById('colorPicker').value = hexValue;
+            }
+        });
+    </script>
+
+
+</body>
+</html>

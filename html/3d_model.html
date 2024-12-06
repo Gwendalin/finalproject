@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Design</title>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Include Bootstrap 3 CSS for Glyphicons -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/r128/examples/js/loaders/PLYLoader.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background-color: #f8f9fa;
+        }
+        .logo-container {
+            text-align: center;
+        }
+        .logo-container img {
+            height: 200px; 
+        }
+        #viewer-container {
+            display: flex;
+            font-size: 16px;
+        }
+        #controls {
+            width: 250px;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        #controls h3 {
+            margin-bottom: 30px;
+            margin-top: 40px;
+            color: #343a40;
+            text-align: center;
+        }
+        #controls label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        #controls p{
+            margin-top: 50px;
+            font-size: 14px;
+        }
+        .reset{
+            border: none;
+            padding: 10px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .back{
+            font-size: 18px;
+            margin-top: 10px; 
+            text-align: center;
+            vertical-align: middle;
+        }
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background-color: black;
+        }
+        canvas {
+            display: block;
+        }
+        #controls select{
+            margin-top: 10px;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        #scale-slider {
+            width: 100%;
+            margin-top: 10px;
+            appearance: none;
+            height: 6px;
+            background: #ddd;
+            outline: none;
+            border-radius: 5px;
+        }
+        #scale-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #343a40;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .btn{
+            margin-top: 10px;
+            width: 100%;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="viewer-container">
+        <!-- Sidebar for controls -->
+        <div id="controls">
+
+            <div class="logo-container">
+                <a href="{% url 'user_home' %}"><img src="{% static '/image/logo.jpg' %}" alt="Logo"></a>
+            </div>
+
+            <a href="{% url 'user_home' %}" style=" color: black; text-decoration: none;"><i class="back bi bi-arrow-left"></i></a> 
+
+            <p class="image-select">Image for 3D Model:</p>
+            <img id="selected-image" src="{% static 'image/sketch-demo3.jpg' %}" alt="Selected Image" style="width: 100%; border: 1px solid #ddd; padding: 5px; margin-bottom: 10px;">
+
+            <label for="scale-slider">Adjust Model Size:</label>
+            <input type="range" id="scale-slider" min="1" max="100" value="50">
+            <p id="scale-value" style="text-align: center;">Scale: 50%</p>
+
+            <button type="button" id ="generate-btn" class="btn btn-outline-dark" style="margin-top: 30%;">Generate 3D Model</button>
+            <button type="button" id="save-btn" class="btn btn-outline-primary">Save</button>
+            <p id="loading">Loading model, please wait...</p>
+        </div>
+    
+        <!-- Main Canvas for 3D Scene -->
+        <div id="canvas-container">
+            {% if model_url %}
+                <div id="model-url" style="display: none;">{{ model_url }}</div>
+            {% endif %}
+            <canvas id="three-canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.set(0, 0, 10);
+
+        // Lighting setup
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(1, 1, 1).normalize();
+        scene.add(directionalLight);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.1;
+        controls.enableZoom = true;
+        controls.minDistance = 5;
+        controls.maxDistance = 50;
+        controls.enablePan = true;
+
+        // Add a GridHelper to visualize the ground
+        const gridHelper = new THREE.GridHelper(100, 100); 
+        scene.add(gridHelper);
+
+        // Add an AxesHelper to visualize the X, Y, and Z axes
+        const axesHelper = new THREE.AxesHelper(50); 
+        scene.add(axesHelper);
+
+        document.getElementById('generate-btn').addEventListener('click', function () {
+            const selectedImageElement = document.getElementById('selected-image');
+            const loadingIndicator = document.getElementById('loading');
+            
+            if (!selectedImageElement || !selectedImageElement.src) {
+                console.error('Selected image element is missing or has no source.');
+                alert('No image is selected. Please choose an image first.');
+                return;
+            }
+
+            const fullPath = selectedImageElement.src;
+            console.log("Full Image Path:", fullPath);
+            
+            const selectedImagePath = fullPath.split(window.location.origin)[1];
+            console.log("Selected Image Path:", selectedImagePath);
+
+            const url = `/3d_model/?image_path=${encodeURIComponent(selectedImagePath)}`;
+            console.log(`Fetching 3D model from: ${url}`);
+
+            loadingIndicator.style.display = 'block';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Network response was not ok:', response.statusText);
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    console.log("Response HTML:", html); // Log the response HTML
+                    loadingIndicator.style.display = 'none';
+
+                    // Create a temporary DOM element to parse the HTML response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    // Check if the model-url element exists
+                    const modelUrlElement = doc.getElementById('model-url');
+                    if (modelUrlElement) {
+                        const modelUrl = modelUrlElement.innerText; // Get the model URL from the hidden div
+                        load3DModel(modelUrl); // Load the model into the scene
+                    } else {
+                        console.error('Model URL element not found in the response.');
+                        alert('Failed to retrieve the model URL. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    loadingIndicator.style.display = 'none';
+                    console.error('Error generating 3D model:', error);
+                    alert('An error occurred while generating the 3D model. Please check the console for more details.');
+                });
+        });
+
+        let mesh;
+        function load3DModel(modelUrl) {
+            const loader = new THREE.PLYLoader();
+            loader.load(
+                modelUrl,
+                (geometry) => {
+                    console.log("Model loaded successfully");
+
+                    // Clear previous mesh if it exists
+                    if (mesh) {
+                        scene.remove(mesh);
+                        mesh.geometry.dispose();
+                        mesh.material.dispose();
+                    }
+
+                    // Center the geometry
+                    geometry.computeBoundingBox();
+                    const boundingBox = geometry.boundingBox;
+                    const center = new THREE.Vector3();
+                    boundingBox.getCenter(center);
+                    geometry.translate(-center.x, -center.y, -center.z); // Center the geometry
+
+                    // Create a material for the mesh
+                    const material = new THREE.MeshStandardMaterial({
+                        vertexColors: true,
+                        flatShading: false,
+                    });
+
+                    // Create the mesh
+                    mesh = new THREE.Mesh(geometry, material);
+
+                    // Calculate the size of the mesh
+                    const size = boundingBox.getSize(new THREE.Vector3());
+                    const maxSize = Math.max(size.x, size.y, size.z);
+                    const scale = 50 / maxSize; // Scale to fit within a certain size
+
+                    // Set the scale and position of the mesh
+                    mesh.scale.set(scale, scale, scale);
+                    mesh.position.set(0, size.y / 2 * scale, 0); // Position it above the ground
+
+                    // Add the mesh to the scene
+                    scene.add(mesh);
+
+                    // Adjust camera position based on the size of the mesh
+                    camera.position.z = maxSize * 2.5; // Adjust camera distance
+                    camera.up.set(0, 1, 0); 
+                    camera.lookAt(0, 0, 0); // Look at the center of the scene
+
+                    animate(); // Start the animation loop
+                },
+                undefined,
+                (error) => {
+                    console.error("Error loading 3D model:", error);
+                    alert('An error occurred while loading the 3D model. Please check the console for more details.');
+                }
+            );
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Event listener for the scale slider
+        const scaleSlider = document.getElementById("scale-slider");
+        const scaleValue = document.getElementById("scale-value");
+
+        scaleSlider.addEventListener("input", () => {
+            const scale = scaleSlider.value / 50; // Adjust scale based on slider value
+            scaleValue.textContent = `Scale: ${scaleSlider.value}%`;
+
+            if (mesh) {
+                mesh.scale.set(scale, scale, scale); // Dynamically update the model scale
+            }
+        });
+
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+    
+{% endblock %}
+
+</body>
+</html>

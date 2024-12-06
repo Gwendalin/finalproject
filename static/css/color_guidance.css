@@ -1,0 +1,68 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.logo-container {
+    text-align: center;
+    margin-top: 20px;
+}
+.logo-container img {
+    height: 200px; 
+}
+/* Navbar styling */
+.navbar-custom {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    padding: 10px 0;
+}
+.navbar-nav {
+    display: flex;
+    justify-content: center;
+}
+.nav-item a {
+    margin: 0 15px;
+    font-size: 14px;
+    color: #000;
+}
+.nav-icons {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 20px;
+    top: 15px;
+}
+/* Button styling */
+.logout-btn {
+    border-radius: 25px;
+    padding: 5px 30px; 
+    font-size: 14px; 
+    margin-left: 10px; 
+}
+.guidance-btn, .reminder, .profile-btn {
+    font-size: 18px; 
+    padding: 10px;
+    margin-left: 10px; 
+    text-align: center;
+    vertical-align: middle;
+}
+.reminder{
+    height: 40px;
+    width: 40px;
+}
+.generate-btn{
+    font-size: 14px;
+    margin-top: 20px;
+    width: 20%;
+    height: 100%;
+}
+p, input, label{
+    font-size: 14px;
+    margin-right: 10px;
+    font-weight: normal;
+}
+.pick-color{
+    margin-top: 20px;
+}

@@ -1,0 +1,130 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.logo-container {
+    text-align: center;
+    margin-top: 20px;
+}
+.logo-container img {
+    height: 200px; 
+}
+/* Navbar styling */
+.navbar-custom {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    padding: 10px 0;
+}
+.navbar-nav {
+    display: flex;
+    justify-content: center;
+}
+.nav-item a {
+    margin: 0 15px;
+    font-size: 14px;
+    color: #000;
+}
+.nav-icons {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 20px;
+    top: 15px;
+}
+/* Button styling */
+.logout-btn {
+    border-radius: 25px;
+    padding: 5px 30px; 
+    font-size: 14px; 
+    margin-left: 10px; 
+}
+.guidance-btn, .reminder, .profile-btn {
+    font-size: 18px; 
+    padding: 10px;
+    margin-left: 10px; 
+    text-align: center;
+    vertical-align: middle;
+}
+.reminder{
+    height: 40px;
+    width: 40px;
+}
+ /* Main heading styling */
+.main-heading {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 36px;
+    font-weight: bold;
+}
+/* Subheading styling */
+.sub-heading {
+    text-align: center;
+    font-size: 18px;
+    margin: 20px 0px 30px;
+}
+.image-grid {
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    margin: 0 auto;
+    max-width: 100%; 
+    height: 400px;
+    overflow: hidden;
+}
+.image-grid img {
+    flex-grow: 1;
+    flex-shrink: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+/* What's Having section */
+.whats-having {
+    text-align: center;
+    padding: 50px 0;
+}
+.whats-having h2 {
+    font-size: 28px;
+    margin-bottom: 40px;
+}
+/* Feature Cards styling */
+.feature-cards {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    padding: 0 20px;
+}
+.feature-card {
+    background-color: #e0f7fa;
+    width: 20%;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    margin: 10px;
+}
+.feature-card:nth-child(odd) {
+    background-color: #e0e7fa;
+}
+.feature-card h5 {
+    font-size: 16px;
+    font-weight: bold;
+}
+.feature-card p {
+    font-size: 14px;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+    .feature-card {
+        width: 45%; 
+    }
+}
+@media (max-width: 768px) {
+    .feature-card {
+        width: 100%; 
+        margin-bottom: 20px;
+    }
+}
