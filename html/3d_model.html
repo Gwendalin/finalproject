@@ -152,7 +152,7 @@
         scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(1, 1, 1).normalize();
+        directionalLight.position.set(10, 10, 10);
         scene.add(directionalLight);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -233,13 +233,6 @@
                 (geometry) => {
                     console.log("Model loaded successfully");
 
-                    // Clear previous mesh if it exists
-                    if (mesh) {
-                        scene.remove(mesh);
-                        mesh.geometry.dispose();
-                        mesh.material.dispose();
-                    }
-
                     // Center the geometry
                     geometry.computeBoundingBox();
                     const boundingBox = geometry.boundingBox;
@@ -250,7 +243,6 @@
                     // Create a material for the mesh
                     const material = new THREE.MeshStandardMaterial({
                         vertexColors: true,
-                        flatShading: false,
                     });
 
                     // Create the mesh
@@ -273,7 +265,19 @@
                     camera.up.set(0, 1, 0); 
                     camera.lookAt(0, 0, 0); // Look at the center of the scene
 
+                    console.log("Mesh position:", mesh.position); 
+                    console.log("Mesh scale:", mesh.scale); 
+                    console.log("Bounding box:", boundingBox); 
+                    console.log("Scene graph:", scene);
+
                     animate(); // Start the animation loop
+
+                    // Clear previous mesh if it exists
+                    if (mesh) {
+                        scene.remove(mesh);
+                        mesh.geometry.dispose();
+                        mesh.material.dispose();
+                    }
                 },
                 undefined,
                 (error) => {
@@ -288,6 +292,8 @@
             controls.update();
             renderer.render(scene, camera);
         }
+
+        animate();
 
         // Event listener for the scale slider
         const scaleSlider = document.getElementById("scale-slider");
