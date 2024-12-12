@@ -119,11 +119,7 @@
             <a href="{% url 'user_home' %}" style=" color: black; text-decoration: none;"><i class="back bi bi-arrow-left"></i></a> 
 
             <p class="image-select">Image for 3D Model:</p>
-            <img id="selected-image" src="{% static 'image/sketch-demo3.jpg' %}" alt="Selected Image" style="width: 100%; border: 1px solid #ddd; padding: 5px; margin-bottom: 10px;">
-
-            <label for="scale-slider">Adjust Model Size:</label>
-            <input type="range" id="scale-slider" min="1" max="100" value="50">
-            <p id="scale-value" style="text-align: center;">Scale: 50%</p>
+            <img id="selected-image" src="{% static 'image/testingImg.jpg' %}" alt="Selected Image" style="width: 100%; border: 1px solid #ddd; padding: 5px; margin-bottom: 10px;">
 
             <button type="button" id ="generate-btn" class="btn btn-outline-dark" style="margin-top: 30%;">Generate 3D Model</button>
             <button type="button" id="save-btn" class="btn btn-outline-primary">Save</button>
@@ -156,20 +152,15 @@
         scene.add(directionalLight);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.1;
-        controls.enableZoom = true;
-        controls.minDistance = 5;
-        controls.maxDistance = 50;
-        controls.enablePan = true;
-
-        // Add a GridHelper to visualize the ground
-        const gridHelper = new THREE.GridHelper(100, 100); 
-        scene.add(gridHelper);
-
-        // Add an AxesHelper to visualize the X, Y, and Z axes
-        const axesHelper = new THREE.AxesHelper(50); 
-        scene.add(axesHelper);
+        controls.enableDamping = true; 
+        controls.dampingFactor = 0.25; 
+        controls.enableZoom = true; 
+        controls.zoomSpeed = 1.0; 
+        controls.enablePan = true; 
+        controls.panSpeed = 0.5; 
+        controls.maxPolarAngle = Math.PI / 2; 
+        controls.minDistance = 1; 
+        controls.maxDistance = 100; 
 
         document.getElementById('generate-btn').addEventListener('click', function () {
             const selectedImageElement = document.getElementById('selected-image');
@@ -232,45 +223,7 @@
                 modelUrl,
                 (geometry) => {
                     console.log("Model loaded successfully");
-
-                    // Center the geometry
-                    geometry.computeBoundingBox();
-                    const boundingBox = geometry.boundingBox;
-                    const center = new THREE.Vector3();
-                    boundingBox.getCenter(center);
-                    geometry.translate(-center.x, -center.y, -center.z); // Center the geometry
-
-                    // Create a material for the mesh
-                    const material = new THREE.MeshStandardMaterial({
-                        vertexColors: true,
-                    });
-
-                    // Create the mesh
-                    mesh = new THREE.Mesh(geometry, material);
-
-                    // Calculate the size of the mesh
-                    const size = boundingBox.getSize(new THREE.Vector3());
-                    const maxSize = Math.max(size.x, size.y, size.z);
-                    const scale = 50 / maxSize; // Scale to fit within a certain size
-
-                    // Set the scale and position of the mesh
-                    mesh.scale.set(scale, scale, scale);
-                    mesh.position.set(0, size.y / 2 * scale, 0); // Position it above the ground
-
-                    // Add the mesh to the scene
-                    scene.add(mesh);
-
-                    // Adjust camera position based on the size of the mesh
-                    camera.position.z = maxSize * 2.5; // Adjust camera distance
-                    camera.up.set(0, 1, 0); 
-                    camera.lookAt(0, 0, 0); // Look at the center of the scene
-
-                    console.log("Mesh position:", mesh.position); 
-                    console.log("Mesh scale:", mesh.scale); 
-                    console.log("Bounding box:", boundingBox); 
-                    console.log("Scene graph:", scene);
-
-                    animate(); // Start the animation loop
+                    console.log("Loaded Geometry:", geometry);
 
                     // Clear previous mesh if it exists
                     if (mesh) {
@@ -278,6 +231,37 @@
                         mesh.geometry.dispose();
                         mesh.material.dispose();
                     }
+
+                    // Create a material for the mesh
+                    const material = new THREE.MeshStandardMaterial({
+                        vertexColors: true,
+                        flatShading: true,
+                    });
+
+                    // Create the mesh
+                    mesh = new THREE.Mesh(geometry, material);
+                    scene.add(mesh);
+
+                    mesh.geometry.computeVertexNormals();
+
+                    // Center and scale the mesh 
+                    const bbox = new THREE.Box3().setFromObject(mesh); 
+                    const center = bbox.getCenter(new THREE.Vector3());
+                    const size = bbox.getSize(new THREE.Vector3());
+                    mesh.position.sub(center);
+                    mesh.position.y += size.y / 2; 
+
+                    mesh.rotation.x = THREE.MathUtils.degToRad(180); 
+
+                    // Scale the model uniformly
+                    const scale = 100 / bbox.getSize(new THREE.Vector3()).length(); 
+                    mesh.scale.set(scale, scale, scale); 
+
+                    // Adjust camera position to focus on the model
+                    camera.position.set(0, size.y, size.z * 2);
+                    controls.target.set(0, size.y / 2, 0); // Focus on the model's base
+                    controls.update();
+                    animate();
                 },
                 undefined,
                 (error) => {
@@ -287,34 +271,18 @@
             );
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-        // Event listener for the scale slider
-        const scaleSlider = document.getElementById("scale-slider");
-        const scaleValue = document.getElementById("scale-value");
-
-        scaleSlider.addEventListener("input", () => {
-            const scale = scaleSlider.value / 50; // Adjust scale based on slider value
-            scaleValue.textContent = `Scale: ${scaleSlider.value}%`;
-
-            if (mesh) {
-                mesh.scale.set(scale, scale, scale); // Dynamically update the model scale
-            }
-        });
-
-
         // Handle window resizing
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
 
     </script>
     

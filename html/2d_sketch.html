@@ -17,14 +17,9 @@
     <!-- CSS -->
     <link href="{% static '/css/2d_sketch.css' %}" rel="stylesheet">
     <!-- Fabric.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
 </head>
 <body>
-
-<script>
-    // Pass user ID from Django to JavaScript
-    const userId = "{{ user_id }}";  
-</script>
 
 <div class="d-flex">
     <!-- Sidebar -->
@@ -37,7 +32,6 @@
         <button id="drag-mode" class="btn btn-outline-dark">Drag</button>
         <button id="free-draw" class="btn btn-outline-dark">Drawing</button>
         <button id="line-mode" class="btn btn-outline-dark">Line</button>
-        <button id="curve-line-mode" class="btn btn-outline-dark">Curve Line</button>
         <button id="rectangle-mode" class="btn btn-outline-dark">Rectangle</button>
         <button id="circle-mode" class="btn btn-outline-dark">Circle</button>
         <button id="eraser-mode" class="btn btn-outline-dark">Eraser</button>
@@ -49,9 +43,9 @@
         <button id="clear-canvas" class="btn btn-outline-danger">Clear Canvas</button>
         <div class="operational-btn">
             <input type="file" id="imageInput" class="btn btn-primary" style="display: none;" />
-            <button onclick="openFile()" class="btn btn-outline-primary">Open File</button>
-            <button onclick="saveAsImage()" class="btn btn-outline-primary">Save as Image</button>
-            <button onclick="saveDesignState()" class="btn btn-outline-primary">Save Design State</button> 
+            <button onclick="" class="btn btn-outline-primary">Open File</button>
+            <button onclick="" class="btn btn-outline-primary">Save as Image</button>
+            <button onclick="" class="btn btn-outline-primary">Save Design State</button> 
         </div>
         
     </div>
@@ -61,427 +55,165 @@
     </div>
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
-    import { getStorage, ref as storageRef, uploadString } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDyvnnQlWsTlO4Qfdj6EqBbHhcC-LNBLu4",
-        authDomain: "final-project-8018a.firebaseapp.com",
-        databaseURL: "https://final-project-8018a-default-rtdb.firebaseio.com",
-        projectId: "final-project-8018a",
-        storageBucket: "final-project-8018a.appspot.com",
-        messagingSenderId: "951767625787",
-        appId: "1:951767625787:web:ba80c0ad4ac3310e60ac1e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-    const storage = getStorage(app);
-
-    function saveAsImage() {
-        const imageUrl = canvas.toDataURL({ format: 'png' });
-
-        // Use the modular Firebase SDK methods to upload the image
-        const imageRef = storageRef(storage, `user_designs/${userId}/design.png`);
-
-        uploadString(imageRef, imageUrl, 'data_url')
-            .then(() => {
-                console.log('Design saved as an image!');
-                alert('Design saved as an image!');
-            })
-            .catch((error) => {
-                console.error('Error saving image:', error);
-            });
-    }
-
-    window.saveAsImage = saveAsImage;
-
-    // Function to save design state (JSON)
-    function saveDesignState() {
-        const designState = canvas.toJSON(); // Get the entire canvas state
-
-        // Use modular SDK to save the design state in Firebase Realtime Database
-        const db = getDatabase(app); // Get Firebase Database reference
-        const designRef = ref(db, 'user_designs/' + userId);
-        set(designRef, {
-            design: JSON.stringify(designState)
-        }).then(() => {
-            console.log('Design state saved!');
-            alert('Design state saved!');
-        }).catch((error) => {
-            console.error('Error saving design state:', error);
-        });
-    }
-
-    // Function to load the saved design state
-    function openFile() {
-        const db = getDatabase(app); // Get Firebase Database reference
-        const designRef = ref(db, 'user_designs/' + userId);
-        get(designRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const designState = snapshot.val().design; // Get the saved design state
-                const canvasData = JSON.parse(designState); // Parse the JSON data
-
-                // Load the canvas design back using loadFromJSON
-                canvas.loadFromJSON(canvasData, canvas.renderAll.bind(canvas), function () {
-                    console.log("Canvas loaded!");
-                });
-            }
-        }).catch((error) => {
-            console.error('Error loading design state:', error);
-        });
-    }
-
-</script>
-
 <script>
     // Initialize Fabric.js Canvas
     const canvas = new fabric.Canvas('designCanvas', {
-        height: window.innerHeight,
-        width: window.innerWidth,
-        isDrawingMode: true,
+        height: window.innerHeight - 100,
+        width: window.innerWidth - 20,
     });
 
-    // State variables
-    let drawingType = [];
-    let currentShape = null;
-    let curvePoints = [];
-    let isDragging = false;
-    let undoStack = [];
-    let brushPaths = []; // Array to store brush paths for undo
-    let controlPoints = [];
-    let currentCurve = null;
-    let isErasing = false; 
-    let fillColor = 'transparent';
+    let drawingType = ''; // Keeps track of the selected tool
+    let currentShape = null; // The shape being drawn
+    let controlPoints = []; // Draggable control points for curves
+    let lineObject = null;
+    let curvePath = null;
 
-    // Tool activation
-    document.getElementById('free-draw').addEventListener('click', () => {
-        resetTools();
-        canvas.isDrawingMode = true;
-    });
-
+    // Line button click event
     document.getElementById('line-mode').addEventListener('click', () => {
-        resetTools();
-        drawingType = 'line';
+        console.log('Line drawing mode activated');
+        startLineDrawing();
     });
 
-    document.getElementById('curve-line-mode').addEventListener('click', () => {
-        resetTools();
-        drawingType = 'curveLine';
-        controlPoints = [];
-        if (currentCurve) {
-            canvas.remove(currentCurve); // Remove the existing curve if present
-            currentCurve = null;
+    // Start line drawing mode
+    function startLineDrawing() {
+        drawingType = 'line';
+        console.log('Start drawing a line');
+    }
+
+    // Mouse down event: Start drawing or interacting with shapes
+    canvas.on('mouse:down', (e) => {
+        const pointer = canvas.getPointer(e.e);
+        console.log('Mouse down at:', pointer);
+
+        if (drawingType === 'line' && !currentShape) {
+            // Create the line on mouse down
+            currentShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+                stroke: 'black',
+                strokeWidth: 2,
+                selectable: true, // Allow selection for interaction
+                hasBorders: false,
+                hasControls: false,
+            });
+            canvas.add(currentShape);
+            console.log('Line created:', currentShape);
+        } else if (!drawingType) {
+            // Handle clicks on existing objects (like the line)
+            const clickedObject = canvas.findTarget(e.e); // Get the clicked object
+            console.log('Clicked Object:', clickedObject);
+
+            if (clickedObject && clickedObject === lineObject) {
+                console.log('Line clicked. Ready for transformation.');
+            }
         }
     });
-    
-    // Function to create a draggable control point
-    function createControlPoint(x, y) {
-        const controlPoint = new fabric.Circle({
-            left: x,
-            top: y,
-            radius: 5,
-            fill: 'blue',
+
+    // Mouse move event: Update line's endpoint
+    canvas.on('mouse:move', (e) => {
+        if (drawingType === 'line' && currentShape) {
+            const pointer = canvas.getPointer(e.e);
+            currentShape.set({ x2: pointer.x, y2: pointer.y });
+            canvas.renderAll();
+            console.log('Line updated to:', pointer);
+        }
+    });
+
+    // Mouse up event: Finalize line
+    canvas.on('mouse:up', () => {
+        if (drawingType === 'line' && currentShape) {
+            currentShape.set({ selectable: true }); // Ensure line is selectable
+            lineObject = currentShape; // Save the line as a reference
+            console.log('Line finalized:', lineObject);
+            currentShape = null; 
+            drawingType = ''; // Reset drawing type
+        }
+    });
+
+    // Transform line into cubic Bézier curve only when control points are moved
+    function transformToCurve(line) {
+        console.log('Transforming line to curve:', line);
+
+        const { x1, y1, x2, y2 } = line;
+
+        // Define initial control points
+        const controlX1 = x1 + (x2 - x1) / 3;
+        const controlY1 = y1; // Start flat
+        const controlX2 = x1 + 2 * (x2 - x1) / 3;
+        const controlY2 = y1; // Start flat
+
+        // Create cubic Bézier curve
+        curvePath = new fabric.Path(`M ${x1} ${y1} C ${controlX1} ${controlY1} ${controlX2} ${controlY2} ${x2} ${y2}`, {
             stroke: 'black',
-            strokeWidth: 1,
+            strokeWidth: 2,
+            fill: '',
+            selectable: false, // Disable selection for the curve
+            opacity: 1,
+        });
+
+        canvas.remove(line);
+        canvas.add(curvePath);
+        console.log('Curve path added:', curvePath);
+
+        // Create draggable control points
+        const startPoint = createControlPoint(x1, y1, updateCurve);
+        const controlPoint1 = createControlPoint(controlX1, controlY1, updateCurve);
+        const controlPoint2 = createControlPoint(controlX2, controlY2, updateCurve);
+        const endPoint = createControlPoint(x2, y2, updateCurve);
+
+        controlPoints = [startPoint, controlPoint1, controlPoint2, endPoint];
+
+        // Bring control points to the front
+        controlPoints.forEach(point => canvas.bringToFront(point));
+        canvas.renderAll();
+    }
+
+    // Create draggable control points
+    function createControlPoint(x, y, callback) {
+        const controlPoint = new fabric.Circle({
+            left: x - 5, // Offset by radius
+            top: y - 5,  // Offset by radius
+            radius: 5,
+            fill: 'red',
             selectable: true,
-            hasControls: false,
             hasBorders: false,
+            hasControls: false,
+        });
+
+        controlPoint.on('moving', function () {
+            // Ensure the line is transformed to a curve only once
+            if (!curvePath) {
+                console.log('Creating curve from line...');
+                transformToCurve(lineObject); // Transform the line to a curve
+            }
+            // Update the curve dynamically
+            callback();
         });
 
         canvas.add(controlPoint);
-
-        // Attach 'moving' event listener to dynamically update the curve
-        controlPoint.on('moving', () => {
-            updateCurve(); // Update the curve dynamically when the point moves
-        });
-
-        controlPoints.push(controlPoint);
         return controlPoint;
     }
 
-    // Function to draw or update the curve dynamically
+    // Update the cubic Bézier curve dynamically as control points move
     function updateCurve() {
-        if (controlPoints.length < 3) return; // Ensure we have all 3 control points
+        if (controlPoints.length !== 4) return;
 
-        // Get the updated positions of the control points
-        const [start, control, end] = controlPoints.map((point) => ({
-            x: point.left,
-            y: point.top,
-        }));
+        const [startPoint, controlPoint1, controlPoint2, endPoint] = controlPoints;
 
-        // Generate the path string for the curve
-        const pathData = `M ${start.x} ${start.y} Q ${control.x} ${control.y} ${end.x} ${end.y}`;
-        console.log("Updating curve with path data:", pathData); // Debugging log
+        console.log('Updating curve with points:');
+        console.log('Start Point:', startPoint.left + 5, startPoint.top + 5);
+        console.log('Control Point 1:', controlPoint1.left + 5, controlPoint1.top + 5);
+        console.log('Control Point 2:', controlPoint2.left + 5, controlPoint2.top + 5);
+        console.log('End Point:', endPoint.left + 5, endPoint.top + 5);
 
-        if (!currentCurve) {
-            // Create a new curve if it doesn't already exist
-            currentCurve = new fabric.Path(pathData, {
-                stroke: canvas.freeDrawingBrush.color || 'black',
-                strokeWidth: 2,
-                fill: 'transparent',
-                selectable: false,
-                evented: false
-            });
-            canvas.add(currentCurve);
-        } else {
-            // Update the existing curve's path
-            currentCurve.set({ path: pathData });
+        const newPath = `M ${startPoint.left + 5} ${startPoint.top + 5} C ${controlPoint1.left + 5} ${controlPoint1.top + 5} ${controlPoint2.left + 5} ${controlPoint2.top + 5} ${endPoint.left + 5} ${endPoint.top + 5}`;
+        const curvePath = canvas.getObjects().find(obj => obj.type === 'path');
+        if (!curvePath) {
+            console.error('Curve path not found');
+            return;
         }
-
-        // Ensure the curve is rendered behind the control points
-        canvas.sendToBack(currentCurve);
-
-        // Render the canvas to reflect changes
-        canvas.renderAll();
-    }
-
-    document.getElementById('rectangle-mode').addEventListener('click', () => {
-        resetTools();
-        drawingType = 'rectangle';
-    });
-
-    document.getElementById('circle-mode').addEventListener('click', () => {
-        resetTools();
-        drawingType = 'circle';
-    });
-
-    document.getElementById('eraser-mode').addEventListener('click', () => {
-        resetTools();
-        isErasing = !isErasing; // Toggle eraser mode
-        canvas.isDrawingMode = false; // Disable drawing mode
-        console.log('Eraser mode:', isErasing); // Debug log
-    });
-
-    // Undo functionality
-    document.getElementById('undo').addEventListener('click', () => { 
-        if (undoStack.length > 0) { 
-            const lastObject = undoStack.pop(); 
-            canvas.remove(lastObject); 
-        } 
-    });
-
-    // Function to set the draggable property of all objects
-    function setObjectsSelectable(selectable) { 
-        canvas.getObjects().forEach((obj) => { 
-            obj.selectable = selectable; obj.evented = selectable; 
-        }); 
-    }
-
-    // Drag mode
-    document.getElementById('drag-mode').addEventListener('click', () => {
-        resetTools();
-        isDragging = !isDragging;
-        canvas.isDrawingMode = !isDragging;
-        setObjectsSelectable(isDragging);
-        if (isDragging) { alert('Drag mode activated'); } else { alert('Drag mode deactivated'); }
-    });
-
-    // Color Picker
-    const colorPicker = document.getElementById('hidden-color-picker');
-    const colorPreview = document.getElementById('current-color');
-    document.getElementById('color-picker-button').addEventListener('click', () => colorPicker.click());
-    colorPicker.addEventListener('input', (e) => {
-        const color = e.target.value;
-        canvas.freeDrawingBrush.color = color;
-        colorPreview.style.backgroundColor = color;
-    });
-
-    // Fill color picker
-    const fillColorPicker = document.createElement('input');
-    fillColorPicker.type = 'color';
-    fillColorPicker.id = 'fill-color-picker';
-    fillColorPicker.classList.add('d-none'); // Hidden input
-    document.body.appendChild(fillColorPicker);
-
-    const fillColorPreview = document.createElement('span');
-    fillColorPreview.id = 'fill-color-preview';
-    fillColorPreview.style.width = '20px';
-    fillColorPreview.style.height = '20px';
-    fillColorPreview.style.display = 'inline-block';
-    fillColorPreview.style.backgroundColor = fillColor;
-
-    document.getElementById('color-picker-button').after(fillColorPreview);
-    document.getElementById('color-picker-button').addEventListener('click', () => {
-        fillColorPicker.click();
-    });
-
-    fillColorPicker.addEventListener('input', (e) => {
-        fillColor = e.target.value;
-        fillColorPreview.style.backgroundColor = fillColor;
-    });
-
-    // Eraser size
-    const eraserSizeInput = document.getElementById('eraser-size');
-    const eraserSizeValue = document.getElementById('eraser-size-value');
-    eraserSizeInput.addEventListener('input', (e) => {
-        canvas.freeDrawingBrush.width = e.target.value;
-        eraserSizeValue.textContent = e.target.value;
-    });
-
-    // Clear Canvas
-    document.getElementById('clear-canvas').addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear the canvas?')) {
-            canvas.clear();
-            undoStack = []; // Clear undo stack
-            brushPaths = []; // Clear brush paths
-            controlPoints = [];
-        }
-    }); 
-
-    // Handle path creation for free draw 
-    canvas.on('path:created', (event) => { 
-        const path = event.path; path.selectable = false; // Ensure paths are not selectable 
-        path.evented = false; // Prevent events on this path 
-        brushPaths.push(path); // Store the path for undo 
-        undoStack.push(path); // Add to undo stack 
-    });
-
-    // Mouse events for drawing
-    canvas.on('mouse:down', (e) => handleMouseDown(e));
-    canvas.on('mouse:move', (e) => handleMouseMove(e));
-    canvas.on('mouse:up', () => {
-        if (drawingType === 'eraser') {
-            isErasing = false; // Deactivate erasing mode when mouse is released
-        } else {
-            currentShape = null; // Reset current shape for other drawing modes
-            currentCurve = null;
-        }
-    });
-
-    function handleMouseDown(event) {
-        const pointer = canvas.getPointer(event.e);
-        if (isDragging) {
-            // If in dragging mode, find the shape at the pointer and select it
-            const objects = canvas.getObjects();
-            selectedShape = objects.find(obj => obj.containsPoint(pointer));
-            if (selectedShape) {
-                canvas.setActiveObject(selectedShape); // Set the selected shape as active
-            }
-        } else {
-            // Drawing mode
-            if (drawingType === 'line') {
-                currentShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
-                    stroke: canvas.freeDrawingBrush.color,
-                    strokeWidth: 2,
-                    selectable: false, 
-                    evented: false 
-                });
-                canvas.add(currentShape);
-                undoStack.push(currentShape); 
-            } else if (drawingType === 'curveLine') { 
-                if (controlPoints.length < 3) {
-                    const controlPoint = createControlPoint(pointer.x, pointer.y);
-
-                    // Draw the curve once all 3 points are created
-                    if (controlPoints.length === 3) {
-                        updateCurve();
-                    }
-                }
-            } else if (drawingType === 'rectangle') {
-                currentShape = new fabric.Rect({
-                    left: pointer.x,
-                    top: pointer.y,
-                    width: 0,
-                    height: 0,
-                    fill: fillColor, // Set selected fill color
-                    stroke: canvas.freeDrawingBrush.color,
-                    strokeWidth: 2,
-                    selectable: false,
-                    evented: false,
-                });
-                canvas.add(currentShape);
-                undoStack.push(currentShape);
-            } else if (drawingType === 'circle') {
-                currentShape = new fabric.Circle({
-                    left: pointer.x,
-                    top: pointer.y,
-                    radius: 0,
-                    fill: fillColor, // Set selected fill color
-                    stroke: canvas.freeDrawingBrush.color,
-                    strokeWidth: 2,
-                    selectable: false,
-                    evented: false,
-                });
-                canvas.add(currentShape);
-                undoStack.push(currentShape);
-            } else if (drawingType === 'eraser') {
-                isErasing = true; 
-                eraseAtPointer(pointer);
-            } else if (drawingType === 'freeDraw') {
-                canvas.isDrawingMode = true;
-                const path = new fabric.Path(`M ${pointer.x} ${pointer.y}`, {
-                    stroke: canvas.freeDrawingBrush.color,
-                    strokeWidth: canvas.freeDrawingBrush.width,
-                    selectable: false, 
-                    evented: false 
-                });
-                canvas.add(path);
-                brushPaths.push(path); 
-                undoStack.push(path); 
-            }
-        }
-    }
-
-    function eraseAtPointer(pointer) {
-        const eraserRadius = parseInt(document.getElementById('eraser-size').value, 10);
-
-        const eraserCircle = new fabric.Circle({
-            left: pointer.x,
-            top: pointer.y,
-            radius: eraserRadius,
-            originX: 'center',
-            originY: 'center',
-        });
-
-        // Filter objects intersecting with the eraser circle
-        const objectsToErase = canvas.getObjects().filter((obj) =>
-            obj.intersectsWithObject(eraserCircle)
-        );
-
-        objectsToErase.forEach((obj) => {
-            canvas.remove(obj); // Remove objects from canvas
-        });
+        curvePath.set({ path: newPath });
 
         canvas.renderAll();
     }
-
-    function handleMouseMove(event) {
-        const pointer = canvas.getPointer(event.e);
-        if (drawingType === 'line' && currentShape) {
-            currentShape.set({ x2: pointer.x, y2: pointer.y });
-        } else if (drawingType === 'curveLine' && currentShape) {
-            // Update the last line segment for curve drawing
-            currentShape.set({ x2: pointer.x, y2: pointer.y });
-        } else if (drawingType === 'rectangle' && currentShape) {
-            currentShape.set({ width: pointer.x - currentShape.left, height: pointer.y - currentShape.top });
-        } else if (drawingType === 'circle' && currentShape) {
-            currentShape.set({ radius: Math.sqrt(Math.pow(pointer.x - currentShape.left, 2) + Math.pow(pointer.y - currentShape.top, 2)) });
-        } else if (drawingType === 'freeDraw' && canvas.isDrawingMode) {
-            drawAtPointer(pointer);
-        } else  if (isErasing) {
-            eraseAtPointer(pointer);
-        }
-        canvas.renderAll();
-    }
-
-    function resetTools() {
-        canvas.isDrawingMode = false;
-        drawingType = '';
-        isDragging = false;
-        isErasing = false;
-        if (currentShape) {
-            currentShape.selectable = false; // Remove drag outline
-        }
-        if (currentCurve) {
-            currentCurve.selectable = false;
-        }
-        controlPoints = [];
-    }
-    
-
 </script>
 
 </body>
