@@ -66,3 +66,25 @@ p, input, label{
 .pick-color{
     margin-top: 20px;
 }
+.color-box {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+.color-box:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+.save-icon:hover {
+    color: gold;
+    transform: scale(1.2);
+    transition: all 0.2s ease;
+}
+.color-picker {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0; /* Fully transparent */
+    pointer-events: none; /* Prevent unintended interactions */
+    z-index: -1; /* Push it behind other elements */
+}

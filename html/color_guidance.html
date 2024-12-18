@@ -6,15 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Color Matching Guidance</title>
   <!-- Bootstrap JS and dependencies -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Include Bootstrap 3 CSS for Glyphicons -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <!-- Bootstrap CSS -->
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- CSS -->
   <link href="{% static '/css/color_guidance.css' %}" rel="stylesheet">
+  <!-- Javascript -->
+  <script type="module" src="{% static '/javascript/color.js' %}"></script>
+  
 </head>
 
 <body>
@@ -37,16 +39,12 @@
             <li class="nav-item">
             <a class="nav-link" href="{% url 'color_guidance' %}">COLOR GUIDANCE</a>
             </li>
-            <li class="nav-item">
-            <a class="nav-link" href="{% url 'recommendation' %}">RECOMMENDATION</a>
-            </li>
         </ul>
         </div>
 
         <!-- Icons on the right -->
         <div class="nav-icons">
         <a href="{% url 'user_guidance' %}"><span class="glyphicon glyphicon-question-sign guidance-btn" style=" color: black; text-decoration: none;"></span></a>
-        <a href="#"><img src="{% static '/image/reminders.png' %}" class="reminder" alt="Reminder"></a>
         <a href="{% url 'profile' %}"><span class="glyphicon glyphicon-user profile-btn" style=" color: black; text-decoration: none;"></span></a>
         <a href="{% url 'guest_home' %}" class="btn btn-outline-dark logout-btn">Logout</a>
         </div>
@@ -67,40 +65,56 @@
                 <label for="hexCode">Enter a HEX color:</label>
                 <input type="text" id="hexCode" name="hex_code" placeholder="#5cad45" value="{{ default_color }}">
             </div>
-            <!-- Color Display Section -->
-            <div class="row justify-content-center mt-4">
+            <button id="generate-button" class="generate-btn btn btn-dark">Generate Colors</button>
+        </form>
+        <!-- Color Display Section -->
+        <div class="container mt-3 border rounded p-3 shadow-sm">
+            <div class="row justify-content-center">
                 {% for color, hex_color in combined_palette %}
-                    <div class="col-2 text-center color-box" 
+                    <div class="col-2 text-center rounded color-box" 
                         data-r="{{ color.0 }}" 
                         data-g="{{ color.1 }}" 
                         data-b="{{ color.2 }}" 
-                        style="height: 100px; margin-bottom: 10px;">
+                        style="height: 100px; margin-bottom: 10px; cursor: pointer; position: relative;"
+                        onclick="openColorPicker('{{ forloop.counter }}', event)"
+                        id="color-box-{{ forloop.counter }}">
                     </div>
-                {% empty %}
-                    <p>No colors available.</p>
-                {% endfor %}
-            </div>
 
-            <!-- Hex Color Display Below Boxes -->
-            <div class="row justify-content-center mt-2">
+                    <!-- Color Picker -->
+                    <input type="color" 
+                    id="color-picker-{{ forloop.counter }}" 
+                    class="color-picker" 
+                    onchange="updateColor(this, '{{ forloop.counter }}')"
+                    value="{{ hex_color }}">
+                    {% empty %}
+                        <p>No colors available.</p>
+                    {% endfor %}
+            </div> 
+            <div class="row justify-content-center">
                 {% for color, hex_color in combined_palette %}
                     <div class="col-2 text-center">
-                        <p>{{ hex_color }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="me-3" id="hex-code-{{ forloop.counter }}" style="font-size: 14px; font-weight: bold;">{{ hex_color }}</span>
+                            <i class="bi bi-star save-icon" id="save-icon-{{ forloop.counter }}" style="cursor: pointer; font-size: 1.5rem; color: grey;"
+                                data-hex="{{ hex_color }}"
+                                onclick="toggleSaveColor(this.dataset.hex, this)"></i>
+                        </div>
                     </div>
                 {% empty %}
-                    <p>No colors available.</p>
+                    <p class="text-center">No colors available.</p>
                 {% endfor %}
             </div>
-
-            <div class="text-center mb-4">
-                <button id="generate-button" class="generate-btn btn btn-dark">Generate Colors</button>
-            </div>
-        </form>
-
+        </div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            Test Alert Message!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div id="alert-box" class="mt-3"></div>
     </div>
 
     <script>
-        // Set background color for each color box based on RGB data
+        // Set background color for each color box
         document.querySelectorAll('.color-box').forEach(function(box) {
             const r = box.getAttribute('data-r');
             const g = box.getAttribute('data-g');
@@ -108,23 +122,24 @@
             box.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         });
 
-        // Synchronize color picker and hex input field
-        document.getElementById('colorPicker').addEventListener('input', function(event) {
-            // When the color picker changes, update the hex input
-            document.getElementById('hexCode').value = event.target.value;
+        // Synchronize color picker and hex input
+        const colorPicker = document.getElementById('colorPicker');
+        const hexCodeInput = document.getElementById('hexCode');
+
+        colorPicker.addEventListener('input', function(event) {
+            hexCodeInput.value = event.target.value;
         });
 
-        document.getElementById('hexCode').addEventListener('input', function(event) {
-            // When the hex input changes, update the color picker
+        hexCodeInput.addEventListener('input', function(event) {
             const hexValue = event.target.value;
-
-            // Ensure the value is a valid hex color
-            if(/^#[0-9A-Fa-f]{6}$/i.test(hexValue)) {
-                document.getElementById('colorPicker').value = hexValue;
+            if (/^#[0-9A-Fa-f]{6}$/i.test(hexValue)) {
+                colorPicker.value = hexValue;
             }
         });
-    </script>
+    
 
+    </script>
+    
 
 </body>
 </html>

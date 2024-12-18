@@ -19,57 +19,34 @@
 </head>
 <body>
     <!-- Header -->
-    <div class="logo-container">
-        <a href="{% url 'user_home' %}"><img src="{% static '/image/logo.jpg' %}" alt="Logo"></a>
-    </div>
-    <div class="container">
-
-        <div class="row">
-            <div class="col">
-                <a href="{% url 'profile' %}" style=" color: black; text-decoration: none;"><i class="back bi bi-arrow-left"></i> Home</a> 
-            </div>
-            <div class="col">
-                <div class="nav-icons">
-                    <a href="{% url 'profile' %}"><span class="glyphicon glyphicon-user profile-btn" style=" color: black; text-decoration: none;"></span></a>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Report</h2>
+        <div class="card shadow p-4">
+            <form method="POST" action="{% url 'user_usage_report' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="report_type" class="form-label"><strong>Select Report Type</strong></label>
+                    <select class="form-select" id="report_type" name="report_type" required>
+                        <option value="" disabled selected>Select Report Type</option>
+                        <option value="system_usage">System Usage Report</option>
+                    </select>
                 </div>
-            </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="start_date" class="form-label"><strong>Start Date</strong></label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="end_date" class="form-label"><strong>End Date</strong></label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Generate Report</button>
+                </div>
+            </form>
         </div>
-        
-        <h1 style="text-align: center;">Report</h1>
-
-        <div class="mb-3">
-            <select class="form-select" id="reportTypeSelect">
-                <option selected>Select Report Type</option>
-                <option value="1">Monthly System Usage Report</option>
-                <option value="2">Monthly Design Output Report</option>
-            </select>
-        </div>
-    
-        <!-- Date Period Section -->
-        <div class="mb-4">
-            <label class="form-label" style="margin-top: 20px;">Select Date Period:</label>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="dd/mm/yyyy" aria-label="Start Date">
-                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-            </div>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="dd/mm/yyyy" aria-label="End Date">
-                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-            </div>
-        </div>
-    
-        <!-- Generate Button -->
-        <button type="button" class="btn btn-primary">GENERATE</button>
     </div>
-    
-    <script>
-        document.getElementById('reportTypeSelect').addEventListener('change', function() {
-            const selectedValue = this.value;
-            if (selectedValue) {
-                window.location.href = selectedValue; // Redirect to the selected URL
-            }
-        });
-    </script>
 
 </body>
 </html>

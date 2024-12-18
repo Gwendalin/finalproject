@@ -27,13 +27,15 @@ from . import profile_views
 from . import edit_profile_views
 from . import generate_model_views
 from . import color_guidance_views
-from . import recommendation_views
 from . import report_views
+from . import logout_views
+from . import save_color_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('', guest_home_views.guest_home, name='guest_home'),
     path('login/', login_views.login_view, name='login'),
+    path('logout/', logout_views.logout_views, name='logout'),
     path('register/', register_views.register, name='register'),
     path('forgot_password/', forgot_password_views.forgot_password, name='forgot_password'),
     path('user_home/', login_views.user_home, name='user_home'),
@@ -43,10 +45,10 @@ urlpatterns = [
     path('guest_guidance/', guidance_views.guest_guidance, name='guest_guidance'),
     path('profile/', profile_views.profile_view, name='profile'),
     path('edit_profile/', edit_profile_views.edit_profile_view, name='edit_profile'),
-    path('recommendation/', recommendation_views.recommendation_view, name='recommendation'),
     path('report/', report_views.report_main, name='report'),
-    #path('user_usage_report/', report_views.user_usage_report, name='user_usage_report'),
+    path('user_usage_report/', report_views.generate_report, name='user_usage_report'),
     path('color_guidance/', color_guidance_views.get_color_palette, name='color_guidance'),
+    path('saved_color/', save_color_views.saved_colors, name= 'saved_color'),
     path('delete_user/', edit_profile_views.delete_account_view, name='delete_user')
     
 ]

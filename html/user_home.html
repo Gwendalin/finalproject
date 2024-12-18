@@ -37,18 +37,14 @@
             <li class="nav-item">
             <a class="nav-link" href="{% url 'color_guidance' %}">COLOR GUIDANCE</a>
             </li>
-            <li class="nav-item">
-            <a class="nav-link" href="{% url 'recommendation' %}">RECOMMENDATION</a>
-            </li>
         </ul>
         </div>
 
         <!-- Icons on the right -->
         <div class="nav-icons">
         <a href="{% url 'user_guidance' %}"><span class="glyphicon glyphicon-question-sign guidance-btn" style=" color: black; text-decoration: none;"></span></a>
-        <a href="#"><img src="{% static '/image/reminders.png' %}" class="reminder" alt="Reminder"></a>
         <a href="{% url 'profile' %}"><span class="glyphicon glyphicon-user profile-btn" style=" color: black; text-decoration: none;"></span></a>
-        <a href="{% url 'guest_home' %}" class="btn btn-outline-dark logout-btn">Logout</a>
+        <a href="{% url 'logout' %}" class="btn btn-outline-dark logout-btn">Logout</a>
         </div>
     </div>
     </nav>

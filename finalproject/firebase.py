@@ -3,12 +3,12 @@ from django.shortcuts import render
 import firebase_admin 
 from firebase_admin import credentials, db
 from firebase_admin import auth
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
-from sklearn.metrics.pairwise import cosine_similarity
+import base64
+import matplotlib.pyplot as plt
+import datetime
 import os
 from django.conf import settings
+import io
 
 config = {
     "apiKey": "AIzaSyDyvnnQlWsTlO4Qfdj6EqBbHhcC-LNBLu4",
@@ -32,12 +32,58 @@ def login(email, password):
         user = authentication.sign_in_with_email_and_password(email, password)
         # Check if the 'user' object is valid
         if 'idToken' in user:
-            return user
+            session_id = log_user_login(user['localId'])
+            return user, session_id
         else:
             return None
     except Exception as e:
         print(f"Login failed: {e}")
         return None 
+
+def log_user_login(user_id):
+    """Log user login time in Firebase."""
+    try:
+        login_time = datetime.datetime.now().isoformat()  # Current time
+        session_data = {
+            "user_id": user_id,
+            "login_time": login_time,
+            "logout_time": None,  # To be updated later
+        }
+        print("Session data to be pushed:", session_data)  
+        session_ref = database.child("user_sessions").push(session_data)
+        print(f"Login time logged for user {user_id} at {login_time}")
+        print("Firebase session reference:", session_ref)
+        return session_ref['name']  # Return session ID (key)
+    except Exception as e:
+        print(f"Error logging login time: {e}")
+        return None
+
+def logout(session_id):
+    try:
+        # Log the logout time for this session
+        if session_id:
+            log_user_logout(session_id)
+            print(f"User session {session_id} logged out successfully.")
+        
+        # Clear session ID or other session-related data
+        return "User logged out successfully."
+    except Exception as e:
+        print(f"Logout failed: {e}")
+        return "Logout failed."
+
+def log_user_logout(session_id):
+    """Update user logout time in Firebase."""
+    try:
+        logout_time = datetime.datetime.now().isoformat()  # Current time
+        print(f"Updating logout time for session {session_id}: {logout_time}")
+        database.child("user_sessions").child(session_id).update({
+            "logout_time": logout_time
+        })
+        print(f"Logout time logged for session {session_id} at {logout_time}")
+        return True
+    except Exception as e:
+        print(f"Error logging logout time: {e}")
+        return False
     
 def register(email, password):
     try:
@@ -116,131 +162,58 @@ def delete_user_account(user_id):
         return True
     except Exception as e:
         print(f"Error deleting account for user {user_id}: {e}")
-        return False    
-    
-# Function to load and preprocess data
-def load_and_preprocess_data():
-    file_path = settings.DATASET_PATH
-    print(f"Attempting to load file from path: {file_path}")
-    
-    # Check if the file exists
-    if not os.path.isfile(file_path):
-        print(f"Error: The file {file_path} does not exist.")
-        return pd.DataFrame()  
-    
+        return False  
+
+def get_daily_usage_data():
     try:
-        df = pd.read_csv(file_path, encoding='utf-16', delimiter=',')
-        print(f"CSV file loaded successfully with shape: {df.shape}")
+        sessions = database.child("user_sessions").get().val()
+        daily_usage = {}
+
+        for session_id, session in sessions.items():
+            login_time = datetime.datetime.fromisoformat(session["login_time"])
+            logout_time = datetime.datetime.fromisoformat(session["logout_time"]) if session["logout_time"] else login_time
+
+            # Calculate duration in hours
+            duration = (logout_time - login_time).total_seconds() / 3600
+            date = login_time.date().strftime('%Y-%m-%d')
+
+            if date in daily_usage:
+                daily_usage[date] += duration
+            else:
+                daily_usage[date] = duration
+
+        return daily_usage
     except Exception as e:
-        print(f"Error reading the CSV file: {e}")
-        return pd.DataFrame()
+        print(f"Error calculating daily usage: {e}")
+        return {}  
     
-    # Check if the DataFrame is empty
-    if df.empty:
-        print("Error: The DataFrame is empty.")
-        return pd.DataFrame() 
-    
-    # Check if required columns exist
-    required_columns = ['Title', 'Caption', 'Image']
-    for column in required_columns:
-        if column not in df.columns:
-            print(f"Error: Missing column '{column}' in the DataFrame. Columns present: {df.columns.tolist()}")
-            return pd.DataFrame()  # Return an empty DataFrame if any required column is missing
-    
-    df['text'] = df['Title'] + ' ' + df['Caption']
-    print(f"DataFrame after adding 'text' column: {df.head()}")
-    return df[['Title', 'Caption', 'Image', 'text']]
+def generate_usage_graph(daily_usage):
+    """Generate usage graph and return it as a base64-encoded image."""
+    try:
+        dates = list(daily_usage.keys())
+        hours = list(daily_usage.values())
 
+        plt.figure(figsize=(10, 6))
+        plt.bar(dates, hours)
+        plt.title('Daily System Usage')
+        plt.xlabel('Date')
+        plt.ylabel('Hours')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
 
-# K-means clustering function
-def kmeans_clustering(df, num_clusters=5):
-    if df.empty:
-        print("Error: DataFrame is empty. Cannot perform clustering.")
-        return df
-    
-    vectorizer = TfidfVectorizer(stop_words='english')
-    X = vectorizer.fit_transform(df['text'])
-    
-    kmeans = KMeans(n_clusters=num_clusters, random_state=0)
-    df['Cluster'] = kmeans.fit_predict(X)
-    
-    return df
+        # Save the plot to a buffer and encode it to base64
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+        plt.close()
 
-# Function to get content based on K-means cluster
-def clustered_content(cluster_id):
-    df = load_and_preprocess_data()
-    if df.empty:
-        return [] 
-    df = kmeans_clustering(df)
+        return image_base64
+    except Exception as e:
+        print(f"Error generating graph: {e}")
+        return None
     
-    cluster_content = df[df['Cluster'] == cluster_id]
-    return cluster_content.to_dict(orient='records')
 
-# Function to get content based on content-based filtering
-def filtering(df, search_query):
-    if df.empty:
-        print("Error: DataFrame is empty. Cannot perform filtering.")
-        return []
-     
-    vectorizer = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform(df['text'])
-    query_tfidf = vectorizer.transform([search_query])
-    cosine_similarities = cosine_similarity(query_tfidf, tfidf_matrix).flatten()
-    
-    similar_indices = cosine_similarities.argsort()[-5:][::-1]
-    recommended_posts = df.iloc[similar_indices]
-    
-    return recommended_posts.to_dict(orient='records')
-
-# Function to store search keyword in Firebase
-def store_search_keyword(keyword):
-    search_ref = database.child("search_keywords").child(keyword)
-    if search_ref.get().val() is None:
-        search_ref.set({'count': 1})
-    else:
-        search_ref.update({'count': pyrebase.database.ServerValue.increment(1)})
-
-# Function to get popular keywords based on frequency
-def popular_keywords():
-    search_ref = db.reference('search_keywords')
-    popular_keywords = search_ref.order_by_child('count').limit_to_last(5).get()
-    
-    if popular_keywords:
-        sorted_keywords = sorted(popular_keywords.items(), key=lambda x: x[1]['count'], reverse=True)
-        return [(keyword, data['count']) for keyword, data in sorted_keywords]
-    return []
-
-# Function to search posts from the dataset based on the query
-def search_posts(keyword):
-    df = load_and_preprocess_data()
-    if df.empty:
-        return []  
-    
-    matching_posts = df[df['Title'].str.contains(keyword, case=False, na=False) |
-                        df['Caption'].str.contains(keyword, case=False, na=False)]
-    return matching_posts.to_dict(orient='records')
-
-# Function to get popular content from Firebase based on search keyword frequency
-def get_popular_content():
-    search_ref = db.reference('search_keywords')
-    popular_keywords = search_ref.order_by_child('count').limit_to_last(5).get()
-    
-    if popular_keywords:
-        sorted_keywords = sorted(popular_keywords.items(), key=lambda x: x[1]['count'], reverse=True)
-      
-        popular_posts = []
-        for keyword, data in sorted_keywords:
-            posts = search_posts(keyword) 
-            popular_posts.extend(posts)
-        return popular_posts
-    return []
-
-def random_posts():
-    df = load_and_preprocess_data()
-    if df.empty:
-        return [] 
-    random_posts = df.sample(frac=1)  
-    return random_posts.to_dict(orient='records')
 
     
 

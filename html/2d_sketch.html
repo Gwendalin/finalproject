@@ -16,6 +16,8 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- CSS -->
     <link href="{% static '/css/2d_sketch.css' %}" rel="stylesheet">
+    <!-- Javascript -->
+    <script type="module" src="{% static '/javascript/sketching.js' %}"></script>
     <!-- Fabric.js -->
     <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
 </head>
@@ -43,9 +45,9 @@
         <button id="clear-canvas" class="btn btn-outline-danger">Clear Canvas</button>
         <div class="operational-btn">
             <input type="file" id="imageInput" class="btn btn-primary" style="display: none;" />
-            <button onclick="" class="btn btn-outline-primary">Open File</button>
-            <button onclick="" class="btn btn-outline-primary">Save as Image</button>
-            <button onclick="" class="btn btn-outline-primary">Save Design State</button> 
+            <button id="save-canvas" class="btn btn-success mb-2">Save Canvas</button>
+            <button id="save-image" class="btn btn-primary mb-2">Save as Image</button>
+            <button id="open-file" class="btn btn-info mb-2">Open File</button>
         </div>
         
     </div>
@@ -54,167 +56,6 @@
         <canvas id="designCanvas"></canvas>
     </div>
 </div>
-
-<script>
-    // Initialize Fabric.js Canvas
-    const canvas = new fabric.Canvas('designCanvas', {
-        height: window.innerHeight - 100,
-        width: window.innerWidth - 20,
-    });
-
-    let drawingType = ''; // Keeps track of the selected tool
-    let currentShape = null; // The shape being drawn
-    let controlPoints = []; // Draggable control points for curves
-    let lineObject = null;
-    let curvePath = null;
-
-    // Line button click event
-    document.getElementById('line-mode').addEventListener('click', () => {
-        console.log('Line drawing mode activated');
-        startLineDrawing();
-    });
-
-    // Start line drawing mode
-    function startLineDrawing() {
-        drawingType = 'line';
-        console.log('Start drawing a line');
-    }
-
-    // Mouse down event: Start drawing or interacting with shapes
-    canvas.on('mouse:down', (e) => {
-        const pointer = canvas.getPointer(e.e);
-        console.log('Mouse down at:', pointer);
-
-        if (drawingType === 'line' && !currentShape) {
-            // Create the line on mouse down
-            currentShape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
-                stroke: 'black',
-                strokeWidth: 2,
-                selectable: true, // Allow selection for interaction
-                hasBorders: false,
-                hasControls: false,
-            });
-            canvas.add(currentShape);
-            console.log('Line created:', currentShape);
-        } else if (!drawingType) {
-            // Handle clicks on existing objects (like the line)
-            const clickedObject = canvas.findTarget(e.e); // Get the clicked object
-            console.log('Clicked Object:', clickedObject);
-
-            if (clickedObject && clickedObject === lineObject) {
-                console.log('Line clicked. Ready for transformation.');
-            }
-        }
-    });
-
-    // Mouse move event: Update line's endpoint
-    canvas.on('mouse:move', (e) => {
-        if (drawingType === 'line' && currentShape) {
-            const pointer = canvas.getPointer(e.e);
-            currentShape.set({ x2: pointer.x, y2: pointer.y });
-            canvas.renderAll();
-            console.log('Line updated to:', pointer);
-        }
-    });
-
-    // Mouse up event: Finalize line
-    canvas.on('mouse:up', () => {
-        if (drawingType === 'line' && currentShape) {
-            currentShape.set({ selectable: true }); // Ensure line is selectable
-            lineObject = currentShape; // Save the line as a reference
-            console.log('Line finalized:', lineObject);
-            currentShape = null; 
-            drawingType = ''; // Reset drawing type
-        }
-    });
-
-    // Transform line into cubic Bézier curve only when control points are moved
-    function transformToCurve(line) {
-        console.log('Transforming line to curve:', line);
-
-        const { x1, y1, x2, y2 } = line;
-
-        // Define initial control points
-        const controlX1 = x1 + (x2 - x1) / 3;
-        const controlY1 = y1; // Start flat
-        const controlX2 = x1 + 2 * (x2 - x1) / 3;
-        const controlY2 = y1; // Start flat
-
-        // Create cubic Bézier curve
-        curvePath = new fabric.Path(`M ${x1} ${y1} C ${controlX1} ${controlY1} ${controlX2} ${controlY2} ${x2} ${y2}`, {
-            stroke: 'black',
-            strokeWidth: 2,
-            fill: '',
-            selectable: false, // Disable selection for the curve
-            opacity: 1,
-        });
-
-        canvas.remove(line);
-        canvas.add(curvePath);
-        console.log('Curve path added:', curvePath);
-
-        // Create draggable control points
-        const startPoint = createControlPoint(x1, y1, updateCurve);
-        const controlPoint1 = createControlPoint(controlX1, controlY1, updateCurve);
-        const controlPoint2 = createControlPoint(controlX2, controlY2, updateCurve);
-        const endPoint = createControlPoint(x2, y2, updateCurve);
-
-        controlPoints = [startPoint, controlPoint1, controlPoint2, endPoint];
-
-        // Bring control points to the front
-        controlPoints.forEach(point => canvas.bringToFront(point));
-        canvas.renderAll();
-    }
-
-    // Create draggable control points
-    function createControlPoint(x, y, callback) {
-        const controlPoint = new fabric.Circle({
-            left: x - 5, // Offset by radius
-            top: y - 5,  // Offset by radius
-            radius: 5,
-            fill: 'red',
-            selectable: true,
-            hasBorders: false,
-            hasControls: false,
-        });
-
-        controlPoint.on('moving', function () {
-            // Ensure the line is transformed to a curve only once
-            if (!curvePath) {
-                console.log('Creating curve from line...');
-                transformToCurve(lineObject); // Transform the line to a curve
-            }
-            // Update the curve dynamically
-            callback();
-        });
-
-        canvas.add(controlPoint);
-        return controlPoint;
-    }
-
-    // Update the cubic Bézier curve dynamically as control points move
-    function updateCurve() {
-        if (controlPoints.length !== 4) return;
-
-        const [startPoint, controlPoint1, controlPoint2, endPoint] = controlPoints;
-
-        console.log('Updating curve with points:');
-        console.log('Start Point:', startPoint.left + 5, startPoint.top + 5);
-        console.log('Control Point 1:', controlPoint1.left + 5, controlPoint1.top + 5);
-        console.log('Control Point 2:', controlPoint2.left + 5, controlPoint2.top + 5);
-        console.log('End Point:', endPoint.left + 5, endPoint.top + 5);
-
-        const newPath = `M ${startPoint.left + 5} ${startPoint.top + 5} C ${controlPoint1.left + 5} ${controlPoint1.top + 5} ${controlPoint2.left + 5} ${controlPoint2.top + 5} ${endPoint.left + 5} ${endPoint.top + 5}`;
-        const curvePath = canvas.getObjects().find(obj => obj.type === 'path');
-        if (!curvePath) {
-            console.error('Curve path not found');
-            return;
-        }
-        curvePath.set({ path: newPath });
-
-        canvas.renderAll();
-    }
-</script>
 
 </body>
 </html>

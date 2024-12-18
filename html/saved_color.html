@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Color</title>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Include Bootstrap 3 CSS for Glyphicons -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- CSS -->
+    <link href="{% static '/css/saved_color.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <div class="header">
+        <a href="{% url 'profile' %}" class="back-btn btn btn-dark">Back</a>
+        <h1 class="text-center" style="margin-top: 20px;">Saved Colors</h1>
+    </div>
+
+    <!-- Saved Colors Grid -->
+    <div class="row justify-content-center">
+        <div id="saved-colors-row" class="col-10 d-flex flex-wrap justify-content-start" style="margin-top: 30px;"></div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script>
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDyvnnQlWsTlO4Qfdj6EqBbHhcC-LNBLu4",
+        authDomain: "final-project-8018a.firebaseapp.com",
+        databaseURL: "https://final-project-8018a-default-rtdb.firebaseio.com",
+        projectId: "final-project-8018a",
+        storageBucket: "final-project-8018a.appspot.com",
+        messagingSenderId: "951767625787",
+        appId: "1:951767625787:web:ba80c0ad4ac3310e60ac1e"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Load saved colors
+    function loadSavedColors() {
+        const container = document.getElementById("saved-colors-row");
+        container.innerHTML = ""; // Clear previous content
+
+        database.ref("savedColors").once("value", snapshot => {
+            if (!snapshot.exists()) {
+                container.innerHTML = "<p class='text-center'>No saved colors.</p>";
+                return;
+            }
+            
+            snapshot.forEach(child => {
+                const hexColor = child.val();
+                const key = child.key;
+
+                const colorBox = `
+                    <div class="col-2 text-center mb-4">
+                        <div class="rounded" style="height: 100px; background-color: ${hexColor};"></div>
+                        <span class="d-block mt-2" style="font-size: 14px; font-weight: bold;">${hexColor}</span>
+                        <!-- Delete Button -->
+                        <button class="btn btn-danger btn-sm mt-2" onclick="deleteColor('${key}')" style="font-size:14px;">
+                            <i class="bi bi-trash-fill"></i> Delete
+                        </button>
+                    </div>
+                `;
+                container.innerHTML += colorBox;
+            });
+        });
+    }
+
+    // Function to delete a color from Firebase
+    function deleteColor(colorKey) {
+        if (confirm("Are you sure you want to delete this color?")) {
+            database.ref("savedColors/" + colorKey).remove()
+                .then(() => {
+                    alert("Color deleted successfully!");
+                    loadSavedColors(); // Reload the colors
+                })
+                .catch(error => console.error("Error deleting color:", error));
+        }
+    }
+
+    // Call loadSavedColors when the page loads
+    document.addEventListener("DOMContentLoaded", loadSavedColors);
+</script>
+</body>
+</html>
