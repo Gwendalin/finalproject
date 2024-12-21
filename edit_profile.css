@@ -1,0 +1,40 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.logo-container {
+    text-align: center;
+    margin-top: 20px;
+}
+.logo-container img {
+    height: 200px; 
+}
+.nav-icons {
+    display: flex;             
+    justify-content: flex-end;    
+    gap: 5px;               
+}
+.delete{
+    font-size: 24px; 
+    padding: 20px;
+    text-align: center;
+    vertical-align: middle;
+}
+.back{
+    font-size: 18px; 
+    text-align: center;
+    vertical-align: middle;
+}
+.container{
+    width: 100%;
+    font-size: 16px;
+}
+.form-group input{
+    font-size: 16px;
+}
+.btn{
+    font-size: 16px;
+    border-radius: 25px;
+    margin-top: 10px;
+}

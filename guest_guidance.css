@@ -1,0 +1,73 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.logo-container {
+    text-align: center;
+    margin-top: 20px;
+}
+.logo-container img {
+    height: 200px; 
+}
+.back-btn{
+    font-size: 18px; 
+    text-align: left;
+    vertical-align: middle;
+}
+.header-section h1{
+    text-align: center;
+}
+.container{
+    padding: 20px;
+}
+.about-section {
+    background-color: #F5F5F7;
+    padding: 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+.about-2D-section {
+    background-color: #F5F5F7;
+    padding: 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+.about-3D-section {
+    background-color: #F5F5F7;
+    padding: 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+.about-color-guidance-section {
+    background-color: #F5F5F7;
+    padding: 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+.about-recommendation-section {
+    background-color: #F5F5F7;
+    padding: 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+.about-events-section {
+    background-color: #F5F5F7;
+    padding: 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+.usage-section {
+    background-color: #F5F5F7;
+    padding: 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+h2 {
+    font-weight: bold;
+    text-align: center;
+}
+p, li{
+    font-size: 14px;
+    padding: 5px;
+}

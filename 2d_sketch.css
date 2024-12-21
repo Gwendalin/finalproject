@@ -1,0 +1,33 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.logo-container {
+    text-align: center;
+    margin-top: 5px;
+}
+.logo-container img {
+    height: 200px; 
+}
+.sidebar{
+    width: 250px;
+    border: 1px solid #ccc;
+}
+.back{
+    font-size: 18px; 
+    text-align: center;
+    vertical-align: middle;
+}
+.btn{
+    border-radius: 25px;
+    margin-top: 5px;
+    font-size: 14px;
+    width: 100%
+}
+.operational-btn{
+    margin-top: 20px;
+}
+.slider-margin{
+    margin-top: 10px;
+}
