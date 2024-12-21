@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Design</title>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Include Bootstrap 3 CSS for Glyphicons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.rawgit.com/mrdoob/three.js/r128/examples/js/loaders/PLYLoader.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background-color: #f8f9fa;
+        }
+        .logo-container {
+            text-align: center;
+        }
+        .logo-container img {
+            height: 200px; 
+        }
+        #viewer-container {
+            display: flex;
+            font-size: 16px;
+        }
+        #controls {
+            width: 250px;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        #controls h3 {
+            margin-bottom: 30px;
+            margin-top: 40px;
+            color: #343a40;
+            text-align: center;
+        }
+        #controls label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        #controls p{
+            margin-top: 50px;
+            font-size: 14px;
+        }
+        .reset{
+            border: none;
+            padding: 10px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .back{
+            font-size: 18px;
+            margin-top: 10px; 
+            text-align: center;
+            vertical-align: middle;
+        }
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background-color: white;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        #controls select{
+            margin-top: 10px;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        #scale-slider {
+            width: 100%;
+            margin-top: 10px;
+            appearance: none;
+            height: 6px;
+            background: #ddd;
+            outline: none;
+            border-radius: 5px;
+        }
+        #scale-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #343a40;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .loading-modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
+            z-index: 9999; /* On top of everything */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-content {
+            background: #fff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+        }
+        .spinner {
+            margin: 20px auto;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="viewer-container">
+        <!-- Sidebar for controls -->
+        <div id="controls">
+
+            <div class="logo-container">
+                <a href="{% url 'user_home' %}"><img src="{% static '/image/logo.jpg' %}" alt="Logo"></a>
+            </div>
+
+            <a href="{% url 'user_home' %}" style=" color: black; text-decoration: none;"><i class="back bi bi-arrow-left"></i></a> 
+
+            <!-- Open File Button -->
+            <div>
+                <button class="list-btn btn btn-secondary" id="list-files-btn" style="margin-top: 20px; width: 100%;font-size: 14px; border-radius: 25px;">Open File</button>
+            </div>
+            <select id="file-list" class="form-control" style="margin-top: 10px; display: none;"></select>
+
+            <p class="image-select">Image for 3D Model:</p>
+            <img id="selected-image" src="" alt="Selected Image" style="width: 100%; border: 1px solid #ddd; padding: 5px; margin-bottom: 10px;">
+
+            <button type="button" id ="generate-btn" class="btn btn-outline-dark" style="margin-top: 30%; width: 100%;font-size: 14px; border-radius: 25px;">Generate 3D Model</button>
+            <button type="button" id="save-btn" class="btn btn-outline-primary" style="margin-top: 10px; width: 100%;font-size: 14px; border-radius: 25px;">Save</button>
+        </div>
+    
+        <!-- Main Canvas for 3D Scene -->
+        <div id="canvas-container">
+            {% if model_url %}
+                <div id="model-url" style="display: none;">{{ model_url }}</div>
+            {% endif %}
+            <canvas id="three-canvas"></canvas>
+        </div>
+    </div>
+
+    <div id="loading-modal" class="modal" tabindex="-1" style="display: none;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content text-center">
+                <div class="modal-body">
+                    <p>Loading model, please wait...</p>
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <div class="modal-footer p-2">
+                    <button type="button" id="close-loading-btn" class="btn btn-sm btn-danger">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyvnnQlWsTlO4Qfdj6EqBbHhcC-LNBLu4",
+            authDomain: "final-project-8018a.firebaseapp.com",
+            projectId: "final-project-8018a",
+            storageBucket: "final-project-8018a.firebasestorage.app",
+            messagingSenderId: "951767625787",
+            appId: "1:951767625787:web:ba80c0ad4ac3310e60ac1e"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const storage = firebase.storage(); // Initialize Firebase Storage
+        const storageRef = storage.ref();
+
+        // Three.js
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.set(0, 0, 10);
+
+        // Lighting setup
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 10, 10);
+        scene.add(directionalLight);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; 
+        controls.dampingFactor = 0.25; 
+        controls.enableZoom = true; 
+        controls.zoomSpeed = 1.0; 
+        controls.enablePan = true; 
+        controls.panSpeed = 0.5; 
+        controls.maxPolarAngle = Math.PI / 2; 
+        controls.minDistance = 1; 
+        controls.maxDistance = 100; 
+
+        const listFilesBtn = document.getElementById('list-files-btn');
+        const fileList = document.getElementById('file-list');
+        const selectedImageElement = document.getElementById('selected-image');
+
+        // List all files in Firebase Storage
+        listFilesBtn.addEventListener('click', () => {
+            fileList.innerHTML = ""; // Clear any previous entries in the dropdown
+            fileList.style.display = 'block'; // Make the file list visible
+
+            // List all files in the "image/" folder in Firebase Storage
+            storageRef.child('image/').listAll()
+                .then((result) => {
+                    if (result.items.length === 0) {
+                        alert("No files found in Firebase Storage.");
+                        return;
+                    }
+                    // Loop through the files and append them to the dropdown
+                    result.items.forEach((fileRef) => {
+                        fileRef.getDownloadURL().then((url) => {
+                            const option = document.createElement('option');
+                            option.value = url; // The file's download URL
+                            option.textContent = fileRef.name; // The file's name
+                            fileList.appendChild(option); // Add the option to the dropdown
+                        });
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error listing files:", error);
+                    alert("Error retrieving files. Check the console for details.");
+                });
+        });
+
+        // Update the displayed image when a file is selected from the dropdown
+        fileList.addEventListener('change', (e) => {
+            const selectedUrl = e.target.value; // Get the selected file's URL
+            selectedImageElement.src = selectedUrl; // Correctly assign the Firebase URL
+            console.log("Selected Firebase file URL:", selectedUrl); // Debug log
+        });
+
+        const loadingIndicator = document.getElementById('loading-modal');
+        const closeLoadingBtn = document.getElementById('close-loading-btn');
+
+        document.getElementById('generate-btn').addEventListener('click', function () {
+
+            loadingIndicator.style.display = 'flex';
+            
+            if (!selectedImageElement || !selectedImageElement.src) {
+                console.error('Selected image element is missing or has no source.');
+                alert('No image is selected. Please choose an image first.');
+                loadingIndicator.style.display = 'none';
+                return;
+            }
+
+            const selectedImageUrl = selectedImageElement.src;
+            console.log("Selected Firebase Image URL:", selectedImageUrl);
+
+            // Create the API URL with the selected image URL as a query parameter
+            const url = `/3d_model/?image_path=${encodeURIComponent(selectedImageUrl)}`;
+            console.log(`Fetching 3D model from: ${url}`);
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Network response was not ok:', response.statusText);
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    console.log("Response HTML:", html); // Log the response HTML
+                    loadingIndicator.style.display = 'none';
+
+                    // Create a temporary DOM element to parse the HTML response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    // Check if the model-url element exists
+                    const modelUrlElement = doc.getElementById('model-url');
+                    if (modelUrlElement) {
+                        const modelUrl = modelUrlElement.innerText; // Get the model URL from the hidden div
+                        load3DModel(modelUrl); // Load the model into the scene
+                    } else {
+                        console.error('Model URL element not found in the response.');
+                        alert('Failed to retrieve the model URL. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    loadingIndicator.style.display = 'none';
+                    console.error('Error generating 3D model:', error);
+                    alert('An error occurred while generating the 3D model. Please check the console for more details.');
+                });
+        });
+
+        let mesh;
+        function load3DModel(modelUrl) {
+            const loader = new THREE.PLYLoader();
+            loader.load(
+                modelUrl,
+                (geometry) => {
+                    console.log("Model loaded successfully");
+                    console.log("Loaded Geometry:", geometry);
+
+                    // Clear previous mesh if it exists
+                    if (mesh) {
+                        scene.remove(mesh);
+                        mesh.geometry.dispose();
+                        mesh.material.dispose();
+                    }
+
+                    // Create a material for the mesh
+                    const material = new THREE.MeshStandardMaterial({
+                        vertexColors: true,
+                        flatShading: true,
+                    });
+
+                    // Create the mesh
+                    mesh = new THREE.Mesh(geometry, material);
+                    scene.add(mesh);
+
+                    mesh.geometry.computeVertexNormals();
+
+                    // Center and scale the mesh 
+                    const bbox = new THREE.Box3().setFromObject(mesh); 
+                    const center = bbox.getCenter(new THREE.Vector3());
+                    const size = bbox.getSize(new THREE.Vector3());
+
+                    mesh.position.sub(center);
+                    mesh.position.y += size.y / 2; 
+
+                    mesh.rotation.x = THREE.MathUtils.degToRad(180); 
+
+                    // Scale the model uniformly to fit within a specific size
+                    const maxDimension = Math.max(size.x, size.y, size.z);
+                    const scaleFactor = 5 / maxDimension; // Adjust '5' to a smaller value if needed
+                    mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+                    // Adjust camera to fit the model
+                    const distance = maxDimension * scaleFactor * 2;
+                    camera.position.set(0, distance / 2, distance);
+                    controls.target.set(0, size.y / 2, 0);
+                    controls.update();
+
+                    animate();
+                },
+                undefined,
+                (error) => {
+                    console.error("Error loading 3D model:", error);
+                    alert('An error occurred while loading the 3D model. Please check the console for more details.');
+                }
+            );
+        }
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        document.getElementById("save-btn").addEventListener("click", () => {
+            saveModelAsImage();
+        });
+
+        function saveModelAsImage() {
+            // Render the scene to the canvas
+            renderer.render(scene, camera);
+
+            // Get the canvas data as a base64 string
+            const canvas = renderer.domElement;
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    // Upload the blob (image) to Firebase
+                    uploadImageToFirebase(blob);
+                } else {
+                    alert("Failed to save the model as an image.");
+                }
+            }, "image/png"); // Save the image as PNG
+        }
+
+        function uploadImageToFirebase(blob) {
+            // Generate a unique filename for the image
+            const fileName = `model_${Date.now()}.png`;
+
+            // Reference to the Firebase Storage folder
+            const fileRef = storageRef.child(`image/${fileName}`);
+
+            // Upload the blob to Firebase
+            const uploadTask = fileRef.put(blob);
+
+            uploadTask.on(
+                "state_changed",
+                (snapshot) => {
+                    // Progress updates (optional)
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    console.log(`Upload is ${progress}% done`);
+                },
+                (error) => {
+                    // Handle upload errors
+                    console.error("Error uploading image:", error);
+                    alert("Failed to upload the image. Please try again.");
+                },
+                () => {
+                    // Upload successful
+                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                        console.log("Image uploaded successfully. URL:", downloadURL);
+                        alert("Model saved as an image successfully!");
+                    });
+                }
+            );
+        }
+
+    </script>
+    
+{% endblock %}
+
+</body>
+</html>

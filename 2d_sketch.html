@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Design Working Space</title>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Include Bootstrap 3 CSS for Glyphicons -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- CSS -->
+    <link href="{% static '/css/2d_sketch.css' %}" rel="stylesheet">
+    <!-- Javascript -->
+    <script type="module" src="{% static '/javascript/sketching.js' %}"></script>
+    <!-- Fabric.js -->
+    <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
+</head>
+<body>
+
+<div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar d-flex flex-column p-3">
+        <div class="logo-container">
+            <a href="{% url 'user_home' %}"><img src="{% static '/image/logo.jpg' %}" alt="Logo"></a>
+        </div>
+        <a href="{% url 'user_home' %}" style=" color: black; text-decoration: none;"><i class="back bi bi-arrow-left"></i></a>
+        <button class="btn btn-secondary" id="undo">Undo</button>
+        <button id="drag-mode" class="btn btn-outline-dark">Drag</button>
+        <button id="free-draw" class="btn btn-outline-dark">Drawing</button>
+        <button id="line-mode" class="btn btn-outline-dark">Line</button>
+        <button id="curve-mode" class="btn btn-outline-dark">Curve Line</button>
+        <button id="rectangle-mode" class="btn btn-outline-dark">Rectangle</button>
+        <button id="circle-mode" class="btn btn-outline-dark">Circle</button>
+        <button id="eraser-mode" class="btn btn-outline-dark">Eraser</button>
+        <button id="color-picker-button" class="btn btn-outline-dark">Color Picker</button>
+        <span id="current-color" style="background-color: #000000;"></span>
+        <input type="color" id="hidden-color-picker" class="d-none">
+        <button id="clear-canvas" class="btn btn-outline-danger">Clear Canvas</button>
+        <div class="operational-btn">
+            <input type="file" id="imageInput" class="btn btn-primary" style="display: none;" />
+            <button id="save-canvas" class="btn btn-success mb-2">Save Canvas</button>
+            <button id="save-image" class="btn btn-primary mb-2">Save as Image</button>
+            <button id="open-file" class="btn btn-info mb-2">Open File</button>
+            <select id="file" class="form-control" style="margin-top: 10px; display: none;"></select>
+        </div>
+        
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="designCanvas"></canvas>
+    </div>
+</div>
+
+</body>
+</html>
+  

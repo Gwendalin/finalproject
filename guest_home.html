@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fashion Design Guest Home Page</title>
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Include Bootstrap 3 CSS for Glyphicons -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <!-- Font Awesome -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- CSS -->
+  <link href="{% static '/css/guest_home.css' %}" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="logo-container">
+        <a href="{% url 'guest_home' %}"><img src="{% static '/image/logo.jpg' %}" alt="Logo"></a>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-icons">
+        <a href="{% url 'guest_guidance' %}"><span class="glyphicon glyphicon-question-sign guidance-btn" style=" color: black; text-decoration: none;"></span></a>
+        <a href="{% url 'register' %}" class="btn btn-outline-dark register-btn">Register</a>
+        <a href="{% url 'login' %}" class="btn btn-outline-dark login-btn">Login</a>
+        </div>
+    </nav>
+
+    <!-- Main Heading -->
+    <h1 class="main-heading">Make Your Design Gorgeous & Charming</h1>
+    <p class="sub-heading">LET'S GET STARTED!</p>
+
+    <!-- What's Having Section -->
+    <section class="whats-having">
+        <h2><strong>What's Having?</strong></h2>
+        <div class="feature-cards">
+        <div class="feature-card">
+            <h5>Recommendation Contents</h5>
+            <p>Providing videos and pictures for styling suggestions and inspirations</p>
+        </div>
+        <div class="feature-card">
+            <h5>Latest Fashion Trends</h5>
+            <p>Stay updated with the newest trends in fashion</p>
+        </div>
+        <div class="feature-card">
+            <h5>Color Matching Guidance</h5>
+            <p>Guidance and advice on color coordination and matching</p>
+        </div>
+        <div class="feature-card">
+            <h5>Fashion Events Information</h5>
+            <p>Display on upcoming fashion shows and events</p>
+        </div>
+        </div>
+    </section>
+
+    <!-- Image Grid -->
+    <div class="image-grid">
+        <img src="{% static '/image/home_1.jpg' %}" alt="Image 1">
+        <img src="{% static '/image/home_2.jpg' %}" alt="Image 2">
+        <img src="{% static '/image/home_3.jpg' %}" alt="Image 3">
+        <img src="{% static '/image/home_4.jpg' %}" alt="Image 4">
+    </div>
+
+</body>
+</html>
